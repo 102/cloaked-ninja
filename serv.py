@@ -2,6 +2,8 @@ from flask import Flask, request, send_from_directory, jsonify, redirect
 import os
 from json import JSONDecoder
 import subprocess
+import stat
+import shutil
 
 app = Flask(__name__, static_url_path='')
 
@@ -11,11 +13,8 @@ def readfile(path):
     return content
     
 def writefile(path, string):
-    with open(path, 'w') as content_file:
+    with open(path, 'w+') as content_file:
         content_file.write(string)
-        
-def is_executable(f):
-    return os.path.isfile(f) and os.access(f, os.X_OK)
 
 PROJECTS_FOLDER = 'projects'
 
@@ -32,8 +31,9 @@ def projects_list():
         _fls = os.listdir(PROJECTS_FOLDER + '/' + project)
         files = []
         for fl in _fls:
-            if not is_executable(fl):
-                content = readfile(PROJECTS_FOLDER + '/' + project + '/' + fl)
+            filepath = PROJECTS_FOLDER + '/' + project + '/' + fl
+            if not (stat.S_IXUSR & os.stat(filepath)[stat.ST_MODE]):
+                content = readfile(filepath)
                 files.append({
                     'name': fl,
                     'content': content
@@ -51,11 +51,41 @@ def edit(pname, fname):
     
 @app.route('/make/<pname>')
 def make_project(pname):
-	prev_dir = os.getcwd()
-	os.chdir(prev_dir + '/' + PROJECTS_FOLDER + '/' + pname)
-	output = subprocess.check_output(["make", "all"])
-	os.chdir(prev_dir)
-	return redirect('/')
-	
+    prev_dir = os.getcwd()
+    try:
+        os.chdir(prev_dir + '/' + PROJECTS_FOLDER + '/' + pname)
+        output = subprocess.check_output(["make", "all"])
+    except: pass
+    finally: os.chdir(prev_dir)
+    return redirect('/')
+    
+@app.route('/run/<pname>')
+def run_project(pname):
+    prev_dir = os.getcwd()
+    try:
+        os.chdir(prev_dir + '/' + PROJECTS_FOLDER + '/' + pname)
+        output = subprocess.check_output("./test", shell=True)
+        writefile(os.getcwd() + '/output', output) 
+    except: pass
+    finally: os.chdir(prev_dir)
+    return redirect('/')
+    
+@app.route('/delete-file/<pname>/<fname>')
+def delete_file(pname, fname):
+    prev_dir = os.getcwd()
+    try:
+        os.chdir(prev_dir + '/' + PROJECTS_FOLDER + '/' + pname)
+        os.remove(fname)
+    except: pass
+    finally: os.chdir(prev_dir)
+    return redirect('/')
+    
+@app.route('/delete/<pname>')
+def delete_project(pname):
+    try:
+        shutil.rmtree(os.getcwd() + '/' + PROJECTS_FOLDER + '/' + pname)
+    except: pass
+    return redirect('/')
+    	
 if __name__ == "__main__":
     app.run(debug=True)

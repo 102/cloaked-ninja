@@ -2,12 +2,15 @@
   <div class="project" ng-repeat="project in projects">
     <h2>
       {{ project.name }}
-      <a href="#make/{{ project.name }}"><i class="fa fa-play"></i></a>
+      <a href="make/{{ project.name }}"><i class="fa fa-plug"> make</i></a>
+      | <a href="run/{{ project.name }}"><i class="fa fa-play"> run</i></a>
+      | <a href="delete/{{ project.name }}"><i class="fa fa-remove"> delete</i></a>
     </h2>
     <p ng-hide="project.files">This project have no files yet</p>
     <p ng-repeat="file in project.files">
       {{ file.name }}
-      <a href="#edit/{{ project.name }}/{{ file.name }}"><i class="fa fa-edit"></i></a>
+      <a href="#edit/{{ project.name }}/{{ file.name }}"><i class="fa fa-edit"> edit</i></a>
+      | <a href="delete-file/{{ project.name }}/{{ file.name }}"><i class="fa fa-remove"> delete</i></a>
     </p>
   </div>
 </div>
