@@ -1,0 +1,13 @@
+<div class="main-container" ng-controller="projectsController">
+  <div class="project" ng-repeat="project in projects">
+    <h2>
+      {{ project.name }}
+      <a href="#make/{{ project.name }}"><i class="fa fa-play"></i></a>
+    </h2>
+    <p ng-hide="project.files">This project have no files yet</p>
+    <p ng-repeat="file in project.files">
+      {{ file.name }}
+      <a href="#edit/{{ project.name }}/{{ file.name }}"><i class="fa fa-edit"></i></a>
+    </p>
+  </div>
+</div>

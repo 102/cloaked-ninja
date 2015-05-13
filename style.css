@@ -1,0 +1,19 @@
+body {
+  margin:0;
+  padding:0;
+}
+
+.main-container {
+  position:absolute;
+  margin:0;
+  padding:0;
+  left:5vw;
+  width:90vw;
+}
+
+.project {
+  padding:10px;
+  margin:10px;
+  height:300px;
+  background-color:#eeeeee;
+}
