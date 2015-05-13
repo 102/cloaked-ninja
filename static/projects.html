@@ -1,4 +1,6 @@
 <div class="main-container" ng-controller="projectsController">
+  <input ng-model="newProjectName" type="text" placeholder="New project name"/>
+  <button ng-click="addProject(newProjectName)">Add new project</button>
   <div class="project" ng-repeat="project in projects">
     <h2>
       {{ project.name }}
@@ -12,5 +14,7 @@
       <a href="#edit/{{ project.name }}/{{ file.name }}"><i class="fa fa-edit"> edit</i></a>
       | <a href="delete-file/{{ project.name }}/{{ file.name }}"><i class="fa fa-remove"> delete</i></a>
     </p>
+    <input ng-model="newFileName" type="text" placeholder="New file name"/>
+    <button ng-click="addFile(project.name, newFileName)">Add new file</button>
   </div>
 </div>

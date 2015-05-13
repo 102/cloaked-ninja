@@ -64,8 +64,8 @@ def run_project(pname):
     prev_dir = os.getcwd()
     try:
         os.chdir(prev_dir + '/' + PROJECTS_FOLDER + '/' + pname)
-        output = subprocess.check_output("./test", shell=True)
-        writefile(os.getcwd() + '/output', output) 
+        output = subprocess.check_output("./run", shell=True)
+        writefile(os.getcwd() + '/output', output)
     except: pass
     finally: os.chdir(prev_dir)
     return redirect('/')
@@ -80,10 +80,27 @@ def delete_file(pname, fname):
     finally: os.chdir(prev_dir)
     return redirect('/')
     
+@app.route('/add-file/<pname>/<fname>')
+def add_file(pname, fname):
+    prev_dir = os.getcwd()
+    try:
+        os.chdir(prev_dir + '/' + PROJECTS_FOLDER + '/' + pname)
+        writefile(os.getcwd() + '/' + fname, '')
+    except: pass
+    finally: os.chdir(prev_dir)
+    return redirect('/')
+    
 @app.route('/delete/<pname>')
 def delete_project(pname):
     try:
         shutil.rmtree(os.getcwd() + '/' + PROJECTS_FOLDER + '/' + pname)
+    except: pass
+    return redirect('/')
+
+@app.route('/add/<pname>')
+def add_project(pname):
+    try:
+        os.mkdir(os.getcwd() + '/' + PROJECTS_FOLDER + '/' + pname)
     except: pass
     return redirect('/')
     	

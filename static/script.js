@@ -40,7 +40,16 @@ angular.module('app', ['ngRoute'])
         });
     };
   }])
-  .controller('projectsController', ['$scope', function($scope) {
+  .controller('projectsController', ['$scope', '$http', '$window', function($scope, $http, $window) {
+	  $scope.addFile = function(projectName, newFileName) {
+		console.log($scope.newFileName);
+		$http.get('add-file/' + projectName + '/' + (newFileName || 'new file'));
+		$window.location.reload();
+	  }
+	  $scope.addProject = function(projectName) {
+		$http.get('add/' + (projectName || 'new project'));
+		$window.location.reload();
+	  }
   }]);
 
 ($( document ).ready(function(){
