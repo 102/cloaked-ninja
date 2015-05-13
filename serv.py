@@ -1,6 +1,7 @@
-from flask import Flask, request, send_from_directory, jsonify
+from flask import Flask, request, send_from_directory, jsonify, redirect
 import os
 from json import JSONDecoder
+import subprocess
 
 app = Flask(__name__, static_url_path='')
 
@@ -12,6 +13,9 @@ def readfile(path):
 def writefile(path, string):
     with open(path, 'w') as content_file:
         content_file.write(string)
+        
+def is_executable(f):
+    return os.path.isfile(f) and os.access(f, os.X_OK)
 
 PROJECTS_FOLDER = 'projects'
 
@@ -28,10 +32,12 @@ def projects_list():
         _fls = os.listdir(PROJECTS_FOLDER + '/' + project)
         files = []
         for fl in _fls:
-            files.append({
-                'name': fl,
-                'content': readfile(PROJECTS_FOLDER + '/' + project + '/' + fl)
-            })
+            if not is_executable(fl):
+                content = readfile(PROJECTS_FOLDER + '/' + project + '/' + fl)
+                files.append({
+                    'name': fl,
+                    'content': content
+                })
         response['projects'].append({
             'name': project,
             'files': files
@@ -42,6 +48,14 @@ def projects_list():
 def edit(pname, fname):
     writefile(PROJECTS_FOLDER + '/' + pname + '/' + fname, JSONDecoder().decode(request.data)['content'])
     return 'success'
+    
+@app.route('/make/<pname>')
+def make_project(pname):
+	prev_dir = os.getcwd()
+	os.chdir(prev_dir + '/' + PROJECTS_FOLDER + '/' + pname)
+	output = subprocess.check_output(["make", "all"])
+	os.chdir(prev_dir)
+	return redirect('/')
 	
 if __name__ == "__main__":
     app.run(debug=True)
