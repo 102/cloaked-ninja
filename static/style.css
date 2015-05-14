@@ -20,3 +20,8 @@ body {
 a:visited {
   text-decoration: none;
 }
+
+textarea {
+  min-width: 400px;
+  min-height: 400px;
+}

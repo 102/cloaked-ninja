@@ -4,6 +4,8 @@ from json import JSONDecoder
 import subprocess
 import stat
 import shutil
+import threading
+from config import *
 
 app = Flask(__name__, static_url_path='')
 
@@ -16,8 +18,6 @@ def writefile(path, string):
     with open(path, 'w+') as content_file:
         content_file.write(string)
 
-PROJECTS_FOLDER = 'projects'
-
 @app.route('/', defaults={'path': 'index.html'})
 @app.route("/<path:path>")
 def serve_static(path):
@@ -25,6 +25,7 @@ def serve_static(path):
 
 @app.route('/projects.json')
 def projects_list():
+    os.chdir(DEFAULT_DIR)
     projects = os.listdir(PROJECTS_FOLDER)
     response = {'projects':[]}
     for project in projects:
@@ -48,15 +49,20 @@ def projects_list():
 def edit(pname, fname):
     writefile(PROJECTS_FOLDER + '/' + pname + '/' + fname, JSONDecoder().decode(request.data)['content'])
     return 'success'
-    
-@app.route('/make/<pname>')
-def make_project(pname):
+
+def make_async(pname):
+    print pname
     prev_dir = os.getcwd()
     try:
         os.chdir(prev_dir + '/' + PROJECTS_FOLDER + '/' + pname)
         output = subprocess.check_output(["make", "all"])
     except: pass
     finally: os.chdir(prev_dir)
+
+@app.route('/make/<pname>')
+def make_project(pname):
+    t = threading.Thread(target=make_async, args=(pname,))
+    t.start()
     return redirect('/')
     
 @app.route('/run/<pname>')
@@ -105,4 +111,4 @@ def add_project(pname):
     return redirect('/')
     	
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=80, debug=True)
