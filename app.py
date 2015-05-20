@@ -1,4 +1,4 @@
-from flask import Flask, request, send_from_directory, jsonify, redirect
+from flask import Flask, request, Response, send_from_directory, jsonify, redirect
 import os
 from json import JSONDecoder
 import subprocess
@@ -6,8 +6,29 @@ import stat
 import shutil
 import threading
 from config import *
+from functools import wraps
 
 app = Flask(__name__, static_url_path='')
+
+def check_auth(username, password):
+  return username == 'admin' and password == 'admin'
+
+def authenticate():
+  return Response(
+    'Unauthorized',
+    401,
+    {'WWW-Authenticate': 'Basic realm="Login Required"'}
+  )
+
+def requires_auth(f):
+  @wraps(f)
+  def decorated(*args, **kwargs):
+    auth = request.authorization
+    if not auth or not check_auth(auth.username, auth.password):
+      return authenticate()
+    print auth.username
+    return f(*args, **kwargs)
+  return decorated
 
 def readfile(path):
     with open(path, 'r') as content_file:
@@ -21,6 +42,7 @@ def writefile(path, string):
 
 @app.route('/', defaults={'path': 'index.html'})
 @app.route("/<path:path>")
+@requires_auth
 def serve_static(path):
     return send_from_directory('static', path)
 
@@ -52,6 +74,7 @@ def projects_list():
     return jsonify(response)
     
 @app.route('/edit/<pname>/<fname>', methods=['POST'])
+@requires_auth
 def edit(pname, fname):
     writefile(PROJECTS_FOLDER + '/' + pname + '/' + fname, JSONDecoder().decode(request.data)['content'])
     return 'success'
