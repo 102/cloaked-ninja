@@ -17,6 +17,7 @@ def readfile(path):
 def writefile(path, string):
     with open(path, 'w+') as content_file:
         content_file.write(string)
+        print 'file ' + path + ' was changed'
 
 @app.route('/', defaults={'path': 'index.html'})
 @app.route("/<path:path>")
@@ -39,6 +40,11 @@ def projects_list():
                     'name': fl,
                     'content': content
                 })
+            else:
+				files.append({
+					'name': fl,
+					'content': '###executable'
+				})
         response['projects'].append({
             'name': project,
             'files': files
@@ -65,12 +71,15 @@ def make_project(pname):
     t.start()
     return redirect('/')
     
-@app.route('/run/<pname>')
+@app.route('/run/<pname>', methods=['GET', 'POST'])
 def run_project(pname):
+    filename = 'run'
+    try: filename = JSONDecoder().decode(request.data)['filename']
+    except: pass
     prev_dir = os.getcwd()
     try:
         os.chdir(prev_dir + '/' + PROJECTS_FOLDER + '/' + pname)
-        output = subprocess.check_output("./run", shell=True)
+        output = subprocess.check_output("./" + filename, shell=True)
         writefile(os.getcwd() + '/output', output)
     except: pass
     finally: os.chdir(prev_dir)

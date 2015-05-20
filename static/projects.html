@@ -5,14 +5,20 @@
     <h2>
       {{ project.name }}
       <a href="make/{{ project.name }}"><i class="fa fa-plug"> make</i></a>
-      | <a href="run/{{ project.name }}"><i class="fa fa-play"> run</i></a>
+      | <input ng-model="executableName" type="text" placeholder="Executable file name">
+        <a ng-click="runProject(project.name, executableName)"><i class="fa fa-play"> run</i></a>
       | <a href="delete/{{ project.name }}"><i class="fa fa-remove"> delete</i></a>
     </h2>
     <p ng-hide="project.files">This project have no files yet</p>
     <p ng-repeat="file in project.files">
       {{ file.name }}
-      <a href="#edit/{{ project.name }}/{{ file.name }}"><i class="fa fa-edit"> edit</i></a>
-      | <a href="delete-file/{{ project.name }}/{{ file.name }}"><i class="fa fa-remove"> delete</i></a>
+      <span ng-show="file.content == '###executable'">
+		| <em>executable file</em>
+      </span>
+      <span ng-hide="file.content == '###executable'">
+        | <a href="#edit/{{ project.name }}/{{ file.name }}"><i class="fa fa-edit"> edit</i></a>
+      </span>
+        | <a href="delete-file/{{ project.name }}/{{ file.name }}"><i class="fa fa-remove"> delete</i></a>
     </p>
     <input ng-model="newFileName" type="text" placeholder="New file name"/>
     <button ng-click="addFile(project.name, newFileName)">Add new file</button>
