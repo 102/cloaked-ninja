@@ -26,7 +26,6 @@ def requires_auth(f):
     auth = request.authorization
     if not auth or not check_auth(auth.username, auth.password):
       return authenticate()
-    print auth.username
     return f(*args, **kwargs)
   return decorated
 
@@ -46,6 +45,7 @@ def writefile(path, string):
 def serve_static(path):
     return send_from_directory('static', path)
 
+@requires_auth
 @app.route('/projects.json')
 def projects_list():
     os.chdir(DEFAULT_DIR)
@@ -85,15 +85,18 @@ def make_async(pname):
     try:
         os.chdir(prev_dir + '/' + PROJECTS_FOLDER + '/' + pname)
         output = subprocess.check_output(["make", "all"])
+        print output
     except: pass
     finally: os.chdir(prev_dir)
 
+@requires_auth
 @app.route('/make/<pname>')
 def make_project(pname):
     t = threading.Thread(target=make_async, args=(pname,))
     t.start()
     return redirect('/')
     
+@requires_auth
 @app.route('/run/<pname>', methods=['GET', 'POST'])
 def run_project(pname):
     filename = 'run'
@@ -108,6 +111,7 @@ def run_project(pname):
     finally: os.chdir(prev_dir)
     return redirect('/')
     
+@requires_auth
 @app.route('/delete-file/<pname>/<fname>')
 def delete_file(pname, fname):
     prev_dir = os.getcwd()
@@ -118,6 +122,7 @@ def delete_file(pname, fname):
     finally: os.chdir(prev_dir)
     return redirect('/')
     
+@requires_auth
 @app.route('/add-file/<pname>/<fname>')
 def add_file(pname, fname):
     prev_dir = os.getcwd()
@@ -128,6 +133,7 @@ def add_file(pname, fname):
     finally: os.chdir(prev_dir)
     return redirect('/')
     
+@requires_auth
 @app.route('/delete/<pname>')
 def delete_project(pname):
     try:
@@ -135,6 +141,7 @@ def delete_project(pname):
     except: pass
     return redirect('/')
 
+@requires_auth
 @app.route('/add/<pname>')
 def add_project(pname):
     try:
@@ -142,5 +149,3 @@ def add_project(pname):
     except: pass
     return redirect('/')
     	
-if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=80, debug=True)

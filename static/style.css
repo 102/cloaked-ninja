@@ -23,6 +23,7 @@ a:visited {
 
 a, a:visited, a:active {
   color: #ff7755;
+  cursor: pointer;
 }
 textarea {
   min-width: 400px;
