@@ -7,8 +7,11 @@ import shutil
 import threading
 from config import *
 from functools import wraps
+from models import ProjectManager
 
 app = Flask(__name__, static_url_path='')
+DEFAULT_DIR = os.getcwd()
+pm = ProjectManager()
 
 def check_auth(username, password):
   return username == 'admin' and password == 'admin'
@@ -29,16 +32,6 @@ def requires_auth(f):
     return f(*args, **kwargs)
   return decorated
 
-def readfile(path):
-    with open(path, 'r') as content_file:
-        content = content_file.read()
-    return content
-    
-def writefile(path, string):
-    with open(path, 'w+') as content_file:
-        content_file.write(string)
-        print 'file ' + path + ' was changed'
-
 @app.route('/', defaults={'path': 'index.html'})
 @app.route("/<path:path>")
 @requires_auth
@@ -48,104 +41,76 @@ def serve_static(path):
 @requires_auth
 @app.route('/projects.json')
 def projects_list():
-    os.chdir(DEFAULT_DIR)
-    projects = os.listdir(PROJECTS_FOLDER)
-    response = {'projects':[]}
-    for project in projects:
-        _fls = os.listdir(PROJECTS_FOLDER + '/' + project)
-        files = []
-        for fl in _fls:
-            filepath = PROJECTS_FOLDER + '/' + project + '/' + fl
-            if not (stat.S_IXUSR & os.stat(filepath)[stat.ST_MODE]):
-                content = readfile(filepath)
-                files.append({
-                    'name': fl,
-                    'content': content
-                })
-            else:
-				files.append({
-					'name': fl,
-					'content': '###executable'
-				})
-        response['projects'].append({
-            'name': project,
-            'files': files
-        })
-    return jsonify(response)
-    
+  return pm.projects_list()
+ 
 @app.route('/edit/<pname>/<fname>', methods=['POST'])
 @requires_auth
 def edit(pname, fname):
-    writefile(PROJECTS_FOLDER + '/' + pname + '/' + fname, JSONDecoder().decode(request.data)['content'])
-    return 'success'
-
-def make_async(pname):
-    print pname
-    prev_dir = os.getcwd()
-    try:
-        os.chdir(prev_dir + '/' + PROJECTS_FOLDER + '/' + pname)
-        output = subprocess.check_output(["make", "all"])
-        print output
-    except: pass
-    finally: os.chdir(prev_dir)
+  data = JSONDecoder().decode(request.data)['content']
+  pm.edit_file(pname, fname, data)
+  return 'success'
 
 @requires_auth
 @app.route('/make/<pname>')
 def make_project(pname):
-    t = threading.Thread(target=make_async, args=(pname,))
-    t.start()
-    return redirect('/')
+  pm.make_project(pname)
+  return redirect('/')
     
 @requires_auth
 @app.route('/run/<pname>', methods=['GET', 'POST'])
 def run_project(pname):
-    filename = 'run'
-    try: filename = JSONDecoder().decode(request.data)['filename']
-    except: pass
-    prev_dir = os.getcwd()
-    try:
-        os.chdir(prev_dir + '/' + PROJECTS_FOLDER + '/' + pname)
-        output = subprocess.check_output("./" + filename, shell=True)
-        writefile(os.getcwd() + '/output', output)
-    except: pass
-    finally: os.chdir(prev_dir)
-    return redirect('/')
+  filename = 'run'
+  try: filename = JSONDecoder().decode(request.data)['filename']
+  except: pass
+  print 'filename is {0}'.format(filename)
+  pm.run_project(pname, filename)
+  return redirect('/')
     
 @requires_auth
 @app.route('/delete-file/<pname>/<fname>')
 def delete_file(pname, fname):
-    prev_dir = os.getcwd()
-    try:
-        os.chdir(prev_dir + '/' + PROJECTS_FOLDER + '/' + pname)
-        os.remove(fname)
-    except: pass
-    finally: os.chdir(prev_dir)
-    return redirect('/')
+  pm.delete_file(pname, fname)
+  return redirect('/')
     
 @requires_auth
 @app.route('/add-file/<pname>/<fname>')
 def add_file(pname, fname):
-    prev_dir = os.getcwd()
-    try:
-        os.chdir(prev_dir + '/' + PROJECTS_FOLDER + '/' + pname)
-        writefile(os.getcwd() + '/' + fname, '')
-    except: pass
-    finally: os.chdir(prev_dir)
-    return redirect('/')
+  pm.add_file(pname, fname)
+  return redirect('/')
     
 @requires_auth
 @app.route('/delete/<pname>')
 def delete_project(pname):
-    try:
-        shutil.rmtree(os.getcwd() + '/' + PROJECTS_FOLDER + '/' + pname)
-    except: pass
-    return redirect('/')
+  pm.delete(pname)
+  return redirect('/')
 
 @requires_auth
 @app.route('/add/<pname>')
 def add_project(pname):
-    try:
-        os.mkdir(os.getcwd() + '/' + PROJECTS_FOLDER + '/' + pname)
-    except: pass
-    return redirect('/')
-    	
+  pm.create(pname)  
+  return redirect('/')
+
+@app.route('/<pname>/<fname>', methods=['POST', 'DELETE', 'PATCH'])
+def files(pname, fname):
+  if request.method == 'POST':
+    pm.add_file(pname, fname)
+    return 'File {0} was created'.format(fname)
+  if request.method == 'DELETE':
+    pm.delete_file(pname, fname)
+    return 'File {0} was deleted'.format(fname)
+  if request.method == 'PATCH':
+    data = JSONDecoder().decode(request.data)['content']
+    pm.edit_file(pname, fname, data)
+    return 'File {0} was edited'.format(fname)
+  abort(400)
+
+
+@app.route('/<pname>', methods=['POST', 'DELETE'])
+def projects(pname):
+  if request.method == 'POST':
+    pm.create(pname)
+    return 'Project {0} was created'.format(pname)
+  if request.method == 'DELETE':
+    pm.delete(pname)
+    return 'Project {0} was deleted'.format(pname)
+  abort(400)

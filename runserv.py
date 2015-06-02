@@ -4,7 +4,7 @@ from tornado.ioloop import IOLoop
 from app import app
 import sys
 
-port = 80
+port = 8080
 try:
   port = int(sys.argv[1])
 except:
