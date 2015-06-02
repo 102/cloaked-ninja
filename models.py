@@ -4,6 +4,7 @@ from config import *
 import shutil
 import stat
 from flask import jsonify
+import threading
 
 def writefile(path, string):
   with open(path, 'w') as content_file:
@@ -19,10 +20,11 @@ def make_async(pname):
   print pname
   prev_dir = os.getcwd()
   try:
-    os.chdir( + '/' + PROJECTS_FOLDER + '/' + pname)
+    os.chdir(prev_dir + '/' + PROJECTS_FOLDER + '/' + pname)
     output = subprocess.check_output(["make", "all"])
     print output
-  except: pass
+  except:
+    print 'Something went wrong'
   finally: os.chdir(prev_dir)
 
 class ProjectManager():
@@ -40,10 +42,11 @@ class ProjectManager():
       print 'Cant delete project {0}'.format(name)
 
   def add_file(self, project, name):
-#    try:
-      writefile(os.getcwd() + '/' + project + '/'  + name, '')
-#    except:
-#      print 'Cant add file {0} to {1} project'.format(project, name)
+    try:
+      open(os.getcwd() + '/' + PROJECTS_FOLDER + '/' + project + '/' + name, 'a').close()
+      #writefile(os.getcwd() + '/' + project + '/'  + name, '')
+    except:
+      print 'Cant add file {0} to {1} project'.format(project, name)
 
   def writefile(path, string):
     with open(path, 'w+') as content_file:

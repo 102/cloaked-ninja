@@ -14,7 +14,7 @@ DEFAULT_DIR = os.getcwd()
 pm = ProjectManager()
 
 def check_auth(username, password):
-  return username == 'admin' and password == 'admin'
+  return username in USERS and USERS[username] == password
 
 def authenticate():
   return Response(
