@@ -44,7 +44,6 @@ class ProjectManager():
   def add_file(self, project, name):
     try:
       open(os.getcwd() + '/' + PROJECTS_FOLDER + '/' + project + '/' + name, 'a').close()
-      #writefile(os.getcwd() + '/' + project + '/'  + name, '')
     except:
       print 'Cant add file {0} to {1} project'.format(project, name)
 
