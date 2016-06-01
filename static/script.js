@@ -55,20 +55,18 @@ angular.module('app', ['ngRoute'])
     };
   }])
   .controller('projectsController', ['$scope', '$http', '$window', function($scope, $http, $window) {
-	  $scope.addFile = function(projectName, newFileName) {
-		console.log($scope.newFileName);
-		$http.get('add-file/' + projectName + '/' + (newFileName || 'new file'));
-		$window.location.reload();
-	  }
-      $scope.addProject = function(projectName) {
-		$http.get('add/' + (projectName || 'new project'));
-		$window.location.reload();
-	  }
-	  $scope.runProject = function(projectName, executableName) {
-		console.log('run/' + projectName);
-		$http.post('run/' + projectName, {filename: executableName || 'run'});
-		$window.location.reload();
-	  }
+    $scope.addFile = function(projectName, newFileName) {
+      $http.get('add-file/' + projectName + '/' + (newFileName || 'new file'));
+      $window.location.reload();
+    }
+    $scope.addProject = function(projectName) {
+      $http.get('add/' + (projectName || 'new project'));
+      $window.location.reload();
+    }
+    $scope.runProject = function(projectName, executableName) {
+      $http.post('run/' + projectName, {filename: executableName || 'run'});
+      $window.location.reload();
+    }
   }]);
 
 
